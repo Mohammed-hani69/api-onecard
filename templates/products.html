@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المنتجات - OneCard API</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- شريط التنقل -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1>🎁 متجر OneCard</h1>
+            </div>
+            <ul class="navbar-menu">
+                <li><a href="/" class="nav-link">الرئيسية</a></li>
+                <li><a href="/products" class="nav-link active">المنتجات</a></li>
+                <li><a href="/cart" class="nav-link">السلة <span class="cart-count" id="cartCount">0</span></a></li>
+                <li><a href="/transactions" class="nav-link">المعاملات</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="container">
+        <!-- البحث والتصفية -->
+        <section class="search-section">
+            <h2>البحث والتصفية</h2>
+            <form method="get" class="search-form">
+                <div class="form-group">
+                    <input type="text" name="search" placeholder="ابحث عن المنتج..." 
+                           value="{{ search }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <select name="category" class="form-control">
+                        <option value="">جميع الفئات</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" 
+                                {% if cat == selected_category %}selected{% endif %}>
+                                {{ cat }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">بحث</button>
+            </form>
+        </section>
+
+        <!-- عرض المنتجات -->
+        <section class="products-section">
+            <h2>المنتجات المتاحة ({{ products.total }})</h2>
+            
+            {% if products.items %}
+                <div class="products-grid">
+                    {% for product in products.items %}
+                        <div class="product-card">
+                            <!-- صورة المنتج -->
+                            {% if product.image %}
+                                <div class="product-image">
+                                    <img src="{{ product.image }}" alt="{{ product.name_en }}">
+                                </div>
+                            {% else %}
+                                <div class="product-image placeholder">
+                                    <span>لا توجد صورة</span>
+                                </div>
+                            {% endif %}
+
+                            <!-- معلومات المنتج -->
+                            <div class="product-info">
+                                <h3>{{ product.name_ar or product.name_en }}</h3>
+                                <p class="product-id">الكود: {{ product.product_id }}</p>
+                                <p class="product-category">{{ product.category_name_ar or product.category_name_en }}</p>
+                                <p class="product-merchant">{{ product.merchant_name_ar or product.merchant_name_en }}</p>
+
+                                <!-- الأسعار -->
+                                <div class="product-prices">
+                                    {% if product.face_value %}
+                                        <p class="face-value">القيمة: {{ "%.2f"|format(product.face_value) }} {{ product.currency or 'SAR' }}</p>
+                                    {% endif %}
+                                    {% if product.recommended_retail_price_after_vat %}
+                                        <p class="price-main">السعر: <strong>{{ "%.2f"|format(product.recommended_retail_price_after_vat) }} {{ product.currency or 'SAR' }}</strong></p>
+                                    {% elif product.cost_price_after_vat %}
+                                        <p class="price-main">السعر: <strong>{{ "%.2f"|format(product.cost_price_after_vat) }} {{ product.currency or 'SAR' }}</strong></p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- زر الإضافة -->
+                                {% if product.available %}
+                                    <button class="btn btn-success" onclick="addToCart('{{ product.product_id }}', '{{ product.name_ar or product.name_en }}')">
+                                        ➕ أضيف إلى السلة
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-disabled" disabled>
+                                        ❌ غير متاح
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- التنقل بين الصفحات -->
+                {% if products.pages > 1 %}
+                    <div class="pagination">
+                        {% if products.has_prev %}
+                            <a href="?page=1&search={{ search }}&category={{ selected_category }}" class="btn btn-sm">الأول</a>
+                            <a href="?page={{ products.prev_num }}&search={{ search }}&category={{ selected_category }}" class="btn btn-sm">السابق</a>
+                        {% endif %}
+
+                        {% for page_num in products.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num == products.page %}
+                                    <span class="current-page">{{ page_num }}</span>
+                                {% else %}
+                                    <a href="?page={{ page_num }}&search={{ search }}&category={{ selected_category }}" class="btn btn-sm">{{ page_num }}</a>
+                                {% endif %}
+                            {% else %}
+                                <span class="pagination-dots">...</span>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if products.has_next %}
+                            <a href="?page={{ products.next_num }}&search={{ search }}&category={{ selected_category }}" class="btn btn-sm">التالي</a>
+                            <a href="?page={{ products.pages }}&search={{ search }}&category={{ selected_category }}" class="btn btn-sm">الأخير</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="no-products">
+                    <p>لم يتم العثور على منتجات</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 نظام OneCard API. جميع الحقوق محفوظة.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // تحديث عدد السلة عند التحميل
+        updateCartCount();
+    </script>
+</body>
+</html>

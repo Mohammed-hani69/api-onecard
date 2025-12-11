@@ -1,0 +1,78 @@
+# البيئات والملفات المؤقتة
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ملفات البيئة الافتراضية
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ملفات IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ملفات قاعدة البيانات
+*.db
+*.sqlite
+*.sqlite3
+
+# ملفات السجل
+*.log
+logs/
+
+# ملفات البيئة المحلية
+.env
+.env.local
+
+# ملفات النسخ الاحتياطية
+*.bak
+*.backup
+*.tmp
+
+# ملفات النظام
+.DS_Store
+Thumbs.db
+
+# مجلد التحميل
+uploads/
+downloads/
+
+# ملفات الاختبار المؤقتة
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ملفات Node (إذا كانت موجودة)
+node_modules/
+npm-debug.log
+
+# ملفات Docker
+.dockerignore
+docker-compose.override.yml
