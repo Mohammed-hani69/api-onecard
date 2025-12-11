@@ -532,6 +532,81 @@ def get_product_info(product_id):
             'message': f'خطأ: {str(e)}'
         }), 500
 
+@app.route('/api/transaction/status/<reseller_ref_number>', methods=['GET'])
+def check_transaction_status(reseller_ref_number):
+    """
+    روت للتحقق من حالة عملية شراء محددة
+    
+    URL Parameters:
+        reseller_ref_number: رقم مرجعي للطلب
+    
+    Returns:
+        JSON: معلومات حالة العملية
+    """
+    try:
+        response = APIService.check_transaction_status(reseller_ref_number)
+        
+        if not APIService.is_success(response):
+            return jsonify({
+                'success': False,
+                'message': APIService.get_error_message(response)
+            }), 400
+        
+        return jsonify({
+            'success': True,
+            'data': response
+        }), 200
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'خطأ: {str(e)}'
+        }), 500
+
+@app.route('/api/reconcile', methods=['POST'])
+def reconcile():
+    """
+    روت للحصول على التوفيق المحاسبي (قائمة العمليات خلال فترة)
+    
+    Body:
+        date_from: تاريخ البداية (yyyy-mm-dd hh:mm:ss)
+        date_to: تاريخ النهاية (yyyy-mm-dd hh:mm:ss)
+        is_successful: True/False
+    
+    Returns:
+        JSON: قائمة العمليات والبيانات المحاسبية
+    """
+    try:
+        data = request.get_json()
+        date_from = data.get('date_from')
+        date_to = data.get('date_to')
+        is_successful = data.get('is_successful', True)
+        
+        if not date_from or not date_to:
+            return jsonify({
+                'success': False,
+                'message': 'يجب توفير تواريخ البداية والنهاية'
+            }), 400
+        
+        response = APIService.reconcile(date_from, date_to, is_successful)
+        
+        if not APIService.is_success(response):
+            return jsonify({
+                'success': False,
+                'message': APIService.get_error_message(response)
+            }), 400
+        
+        return jsonify({
+            'success': True,
+            'data': response
+        }), 200
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'خطأ: {str(e)}'
+        }), 500
+
 # ==================== معالجة الأخطاء ====================
 
 @app.errorhandler(404)

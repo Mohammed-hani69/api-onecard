@@ -104,3 +104,18 @@ def get_bill_inquire_password(product_id):
 def get_topup_password(product_id):
     """احسب كلمة المرور لطلب الأعلى السعر"""
     return generate_password(RESELLER_USERNAME + str(product_id) + SECRET_KEY)
+
+def get_products_list_password(merchant_id=None):
+    """احسب كلمة المرور لطلب قائمة المنتجات المفصلة"""
+    if merchant_id:
+        return generate_password(RESELLER_USERNAME + str(merchant_id) + SECRET_KEY)
+    return generate_password(RESELLER_USERNAME + str(MERCHANT_ID) + SECRET_KEY)
+
+def get_reconcile_password(date_from, date_to, is_successful):
+    """احسب كلمة المرور لطلب التوفيق المحاسبي"""
+    return generate_password(RESELLER_USERNAME + str(date_from) + str(date_to) + str(is_successful) + SECRET_KEY)
+
+def get_check_transaction_status_password(reseller_ref_number):
+    """احسب كلمة المرور للتحقق من حالة العملية"""
+    return generate_password(RESELLER_USERNAME + str(reseller_ref_number) + SECRET_KEY)
+

@@ -7,7 +7,8 @@ import json
 from config import (
     API_BASE_URL, RESELLER_USERNAME, SECRET_KEY, MERCHANT_ID,
     get_check_balance_password, get_product_password, 
-    get_purchase_password, get_bill_inquire_password, get_topup_password
+    get_purchase_password, get_bill_inquire_password, get_topup_password,
+    get_products_list_password, get_reconcile_password, get_check_transaction_status_password
 )
 
 class APIService:
@@ -69,13 +70,9 @@ class APIService:
         Returns:
             dict: استجابة API تحتوي على قائمة المنتجات
         """
-        import hashlib
-        password = f"{RESELLER_USERNAME}{MERCHANT_ID}{SECRET_KEY}"
-        password_hash = hashlib.md5(password.encode()).hexdigest()
-        
         data = {
             'resellerUsername': RESELLER_USERNAME,
-            'password': password_hash,
+            'password': get_products_list_password(),
             'merchantId': MERCHANT_ID
         }
         return APIService._make_request('detailed-products-list', data)
@@ -201,6 +198,52 @@ class APIService:
         """
         return response.get('status', False) == True
     
+    
+    @staticmethod
+    def check_transaction_status(reseller_ref_number):
+        """
+        التحقق من حالة عملية شراء محددة
+        
+        معادلة كلمة المرور: MD5(resellerUsername + resellerRefNumber + secretKey)
+        
+        Args:
+            reseller_ref_number: رقم مرجعي للطلب
+            
+        Returns:
+            dict: استجابة API تحتوي على حالة العملية
+        """
+        data = {
+            'resellerUsername': RESELLER_USERNAME,
+            'password': get_check_transaction_status_password(reseller_ref_number),
+            'resellerRefNumber': reseller_ref_number
+        }
+        return APIService._make_request('check-transaction-status', data)
+    
+    # ==================== التوفيق المحاسبي ====================
+    @staticmethod
+    def reconcile(date_from, date_to, is_successful):
+        """
+        احضار قائمة بجميع العمليات خلال فترة زمنية محددة
+        
+        معادلة كلمة المرور: MD5(resellerUsername + dateFrom + dateTo + isSuccessful + secretKey)
+        
+        Args:
+            date_from: تاريخ البداية (yyyy-mm-dd hh:mm:ss)
+            date_to: تاريخ النهاية (yyyy-mm-dd hh:mm:ss)
+            is_successful: True/False للعمليات الناجحة/الفاشلة
+            
+        Returns:
+            dict: استجابة API تحتوي على قائمة العمليات
+        """
+        data = {
+            'resellerUsername': RESELLER_USERNAME,
+            'password': get_reconcile_password(date_from, date_to, is_successful),
+            'dateFrom': date_from,
+            'dateTo': date_to,
+            'isSuccessful': is_successful
+        }
+        return APIService._make_request('reconcile', data)
+    
     @staticmethod
     def get_error_message(response):
         """
@@ -215,3 +258,4 @@ class APIService:
         error_code = response.get('errorCode', 'unknown')
         error_message = response.get('errorMessage', 'حدث خطأ غير معروف')
         return f"({error_code}) {error_message}"
+
