@@ -158,6 +158,32 @@ def transactions():
 
 # ==================== API الروتات - عمليات البيانات ====================
 
+@app.route('/api/test/connection', methods=['GET'])
+def test_connection():
+    """
+    روت لاختبار الاتصال بـ API الخارجي
+    يساعد في تشخيص مشاكل الاتصال
+    
+    Returns:
+        JSON: معلومات الاختبار
+    """
+    try:
+        # اختبر فحص الرصيد
+        response = APIService.check_balance()
+        
+        return jsonify({
+            'success': APIService.is_success(response),
+            'message': 'نتيجة اختبار الاتصال',
+            'response': response
+        }), 200 if APIService.is_success(response) else 400
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'خطأ: {str(e)}',
+            'error': str(e)
+        }), 500
+
 @app.route('/api/products/fetch', methods=['POST'])
 def fetch_products():
     """
@@ -172,13 +198,23 @@ def fetch_products():
         response = APIService.get_detailed_products_list()
         
         if not APIService.is_success(response):
+            error_msg = APIService.get_error_message(response)
             return jsonify({
                 'success': False,
-                'message': APIService.get_error_message(response)
+                'message': error_msg,
+                'full_response': response
             }), 400
         
         # معالجة المنتجات المحضرة
         products_data = response.get('products', [])
+        
+        if not products_data:
+            return jsonify({
+                'success': False,
+                'message': 'لم يتم استرجاع أي منتجات من API',
+                'full_response': response
+            }), 400
+        
         added_count = 0
         updated_count = 0
         

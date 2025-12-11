@@ -4,12 +4,17 @@
 
 import requests
 import json
+import logging
 from config import (
     API_BASE_URL, RESELLER_USERNAME, SECRET_KEY, MERCHANT_ID,
     get_check_balance_password, get_product_password, 
     get_purchase_password, get_bill_inquire_password, get_topup_password,
     get_products_list_password, get_reconcile_password, get_check_transaction_status_password
 )
+
+# إعداد logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class APIService:
     """
@@ -31,10 +36,16 @@ class APIService:
         """
         try:
             url = f"{API_BASE_URL}/{endpoint}"
+            logger.info(f"طلب API: {url}")
+            logger.debug(f"البيانات المرسلة: {data}")
+            
             response = requests.post(url, json=data, timeout=10)
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            logger.info(f"استجابة API: {result.get('status', 'unknown')}")
+            return result
         except requests.exceptions.RequestException as e:
+            logger.error(f"خطأ في الاتصال بـ API: {str(e)}")
             return {
                 'status': False,
                 'errorCode': '999',
@@ -61,19 +72,25 @@ class APIService:
     
     # ==================== احضار قائمة المنتجات ====================
     @staticmethod
-    def get_detailed_products_list():
+    def get_detailed_products_list(merchant_id=None):
         """
         احضار قائمة شاملة بجميع المنتجات المتاحة مع تفاصيلها
         
         معادلة كلمة المرور: MD5(resellerUsername + merchantId + secretKey)
         
+        Args:
+            merchant_id: معرف التاجر (اختياري)
+            
         Returns:
             dict: استجابة API تحتوي على قائمة المنتجات
         """
+        # إذا لم يتم تحديد merchantId، استخدم المحدد في الإعدادات
+        mid = merchant_id if merchant_id else MERCHANT_ID
+        
         data = {
             'resellerUsername': RESELLER_USERNAME,
-            'password': get_products_list_password(),
-            'merchantId': MERCHANT_ID
+            'password': get_products_list_password(mid),
+            'merchantId': mid if mid else ''
         }
         return APIService._make_request('detailed-products-list', data)
     
